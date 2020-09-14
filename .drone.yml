@@ -14,7 +14,7 @@ steps:
 
 # @see: http://plugins.drone.io/drone-plugins/drone-docker/
 # @see: https://github.com/drone-plugins/drone-docker
-- name: build-docker-k8s
+- name: build-harbor
   image: plugins/docker
   settings:
     registry:
@@ -32,6 +32,22 @@ steps:
     branch:
     - master
 
+# @see: http://plugins.drone.io/drone-plugins/drone-docker/
+# @see: https://github.com/drone-plugins/drone-docker
+- name: build-dockerhub
+  image: plugins/docker
+  settings:
+    repo: immanuelfodor/kube-karp
+    username: immanuelfodor
+    password:
+      from_secret: dockerhub_kubekarp_access_token
+    dockerfile: Dockerfile
+    tags:
+      - master
+  when:
+    branch:
+    - master
+
 # @see: http://plugins.drone.io/drone-plugins/drone-webhook/
 # @see: https://keel.sh/docs/#webhooks
 - name: deploy-k8s
@@ -42,6 +58,9 @@ steps:
     content_type: application/json
     template:
       from_secret: keel_native_payload_repo_tag_master
+  when:
+    branch:
+    - master
 
 # @see: http://plugins.drone.io/drone-plugins/drone-webhook/
 - name: notify-done
