@@ -33,6 +33,17 @@ steps:
     - master
 
 # @see: http://plugins.drone.io/drone-plugins/drone-webhook/
+# @see: https://keel.sh/docs/#webhooks
+- name: deploy-k8s
+  image: plugins/webhook
+  settings:
+    urls:
+      from_secret: keel_webhook_url
+    content_type: application/json
+    template:
+      from_secret: keel_native_payload_repo_tag_master
+
+# @see: http://plugins.drone.io/drone-plugins/drone-webhook/
 - name: notify-done
   image: plugins/webhook
   failure: ignore
