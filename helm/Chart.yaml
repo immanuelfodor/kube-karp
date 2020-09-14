@@ -1,8 +1,9 @@
 apiVersion: v2
 name: kube-karp
-description: Add a floating virtual IP to a k8s cluster for load balancing
+description: Easily add a floating virtual IP to a k8s cluster for load balancing
 keywords:
   - "ucarp"
+  - "carp"
   - "vrrp"
   - "load balancing"
   - "vip"

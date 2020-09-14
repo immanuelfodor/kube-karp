@@ -34,7 +34,7 @@ podAnnotations: {}
 envVars:
   # The floating virtual IP for load balancing
   virtualIp: "192.168.100.1"
-  # Subnet of the virtualIp where the VRRP broadcast will be sent for advertisement
+  # Subnet of the virtualIp where the CARP broadcast will be sent for advertisement
   subnet: 24
   # Interface of the host where the virtualIp will be managed as secondary IP
   interface: eth0
