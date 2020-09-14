@@ -1,0 +1,11 @@
+version: '3'
+
+services:
+  kube-karp:
+    build: .
+    image: kube-karp:master
+    container_name: kube-karp
+    restart: unless-stopped
+    network_mode: "host"
+    cap_add:
+      - NET_ADMIN

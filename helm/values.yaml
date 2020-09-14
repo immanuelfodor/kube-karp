@@ -1,0 +1,88 @@
+# Default values for kube-karp.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+nameOverride: ""
+fullnameOverride: ""
+
+image:
+  repository: immanuelfodor/kube-karp
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion
+  tag: ""
+
+# Add your custom image pull secrets if you're using a private registry
+# The secret should contain the docker config.json
+# @see: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+imagePullSecrets: []
+# imagePullSecrets:
+#  - name: registry-dockerconfig-json
+
+# Add your custom pod annotations here
+# For example, if you have Keel, you can make the pods auto update
+podAnnotations: {}
+# podAnnotations:
+#   keel.sh/approvals: "0"
+#   keel.sh/policy: all
+#   keel.sh/pollSchedule: '@every 24h'
+#   keel.sh/trigger: poll
+
+# Environment variables passed to the pods
+# Mainly related to ucarp command line flags
+# @see: https://github.com/lorf/UCarp
+envVars:
+  # The floating virtual IP for load balancing
+  virtualIp: "192.168.100.1"
+  # Subnet of the virtualIp where the VRRP broadcast will be sent for advertisement
+  subnet: 24
+  # Interface of the host where the virtualIp will be managed as secondary IP
+  interface: eth0
+  # An int [1-255] that is different for every virtualIp managed by different kube-karp deployments
+  # in the same cluster. You can leave this default if you need just one floating IP. Used for
+  # broadcasting between the same set of pods.
+  serverId: 10
+  # A random broadcast password that is shared between DaemonSet pods in the cluster
+  # Max 16 chars are supported by ucarp, so it will be truncated if you provide longer
+  # If you leave it empty, a random alphanumeric string is generated for you
+  password: ""
+  # A custom script which handles the IP addition to the interface
+  # You can leave this default empty unless you've mounted something into the containers
+  upScript: ""
+  # A custom script which handles the IP deletion from the interface
+  # You can leave this default empty unless you've mounted something into the containers
+  downScript: ""
+  # Extra flags to add to the ucarp run command
+  extraFlags: ""
+  # Any string added here means verbose output from the container (but not from ucarp)
+  # Can be used for development purposes but no need for it in production
+  debug: ""
+
+# We set container policies instead
+podSecurityContext: {}
+# The container needs to manage the host interface settings but we make
+# other policies pretty restrictive
+securityContext:
+  capabilities:
+    add: 
+    - NET_ADMIN
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+
+# Memory usage should be around 3-4Mi when running on just one node
+# and cpu usage around 0% - but let's dream big
+resources:
+  limits:
+    cpu: 1000m
+    memory: 100Mi
+  requests:
+    cpu: 30m
+    memory: 10Mi
+
+# This toleration is to have the daemonset runnable on master nodes
+# You want to run one pod on all nodes by default
+tolerations:
+  - key: node-role.kubernetes.io/master
+    effect: NoSchedule
+
+nodeSelector: {}
+affinity: {}

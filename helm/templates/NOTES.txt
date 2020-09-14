@@ -1,0 +1,11 @@
+1. You can check which host has the virtual IP by getting the interface configs via SSH on each node:
+  ip addr show {{ .Values.envVars.interface }}
+
+2. If you reboot/shut down the node that has the virtual IP, a different node should take over
+  load balancing the incoming connections. For example, you can still access the kube api server
+  at https://{{ .Values.envVars.virtualIp }}:6443 (if you've set this up in your kubeconfig file).
+
+3. For kube api server load balancing, don't forget to read the kube-karp project README on how to 
+  set up custom SANs in your api server cert, otherwise, kubectl will not be able to connect 
+  without the insecure cert flag: kubectl --insecure-skip-tls-verify=true ...
+  See: https://github.com/immanuelfodor/kube-karp

@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ include "kube-karp.fullname" . }}
+  labels:
+    {{- include "kube-karp.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "kube-karp.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+    {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      labels:
+        {{- include "kube-karp.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- end }}
+      hostNetwork: true
+      terminationGracePeriodSeconds: 5
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: KARP_INTERFACE
+              value: "{{ .Values.envVars.interface }}"
+            - name: KARP_VIRTUAL_IP
+              value: "{{ .Values.envVars.virtualIp }}"
+            - name: KARP_SUBNET
+              value: "{{ .Values.envVars.subnet }}"
+            - name: KARP_SERVER_ID
+              value: "{{ .Values.envVars.serverId }}"
+            - name: KARP_PASSWORD
+              value: "{{ .Values.envVars.password | default (randAlphaNum 16) | trunc 16 }}"
+            {{- if .Values.envVars.upScript }}
+            - name: KARP_UPSCRIPT
+              value: "{{ .Values.envVars.upScript }}"
+            {{- end }}
+            {{- if .Values.envVars.downScript }}
+            - name: KARP_DOWNSCRIPT
+              value: "{{ .Values.envVars.downScript }}"
+            {{- end }}
+            {{- if .Values.envVars.extraFlags }}
+            - name: KARP_EXTRA_FLAGS
+              value: "{{ .Values.envVars.extraFlags }}"
+            {{- end }}
+            {{- if .Values.envVars.debug }}
+            - name: KARP_DEBUG
+              value: "{{ .Values.envVars.debug }}"
+            {{- end }}
+          livenessProbe:
+            exec:
+              command:
+              - pidof
+              - ucarp
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
