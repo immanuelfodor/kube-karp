@@ -2,6 +2,10 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: {{ include "kube-karp.fullname" . }}
+  {{- with .Values.setAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   labels:
     {{- include "kube-karp.labels" . | nindent 4 }}
 spec:

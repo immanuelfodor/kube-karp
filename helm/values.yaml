@@ -18,14 +18,15 @@ imagePullSecrets: []
 # imagePullSecrets:
 #  - name: registry-dockerconfig-json
 
-# Add your custom pod annotations here
-# For example, if you have Keel, you can make the pods auto update
-podAnnotations: {}
-# podAnnotations:
+# Add your custom set or pod annotations here
+# For example, if you have Keel, you can make the set auto update
+setAnnotations: {}
+# setAnnotations:
 #   keel.sh/approvals: "0"
 #   keel.sh/policy: all
 #   keel.sh/pollSchedule: '@every 24h'
 #   keel.sh/trigger: poll
+podAnnotations: {}
 
 # Environment variables passed to the pods
 # Mainly related to ucarp command line flags
