@@ -1,0 +1,55 @@
+---
+kind: pipeline
+type: docker
+name: build
+
+clone:
+  depth: 50
+
+platform:
+  os: linux
+  arch: amd64
+
+steps:
+
+# @see: http://plugins.drone.io/drone-plugins/drone-docker/
+# @see: https://github.com/drone-plugins/drone-docker
+- name: build-docker-k8s
+  image: plugins/docker
+  settings:
+    registry:
+      from_secret: harbor_registry_fqdn
+    repo:
+      from_secret: harbor_repo
+    username:
+      from_secret: harbor_robot_kubekarp_push_username
+    password:
+      from_secret: harbor_robot_kubekarp_push_password
+    dockerfile: Dockerfile
+    tags:
+      - master
+  when:
+    branch:
+    - master
+
+# @see: http://plugins.drone.io/drone-plugins/drone-webhook/
+- name: notify-done
+  image: plugins/webhook
+  failure: ignore
+  settings:
+    urls:
+      from_secret: done_webhook_url
+    content_type: application/json
+    template: |
+      {
+        "build": "{{ build.status }} @ {{ repo.owner }}/{{ repo.name }} on branch {{ build.branch }}",
+        "url": "{{ build.link }}"
+      }
+
+trigger:
+  branch:
+  - master
+  - staging
+  - dev
+  event:
+  - push
