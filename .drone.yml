@@ -42,11 +42,14 @@ steps:
     password:
       from_secret: dockerhub_kubekarp_access_token
     dockerfile: Dockerfile
+    auto_tag: true
     tags:
       - master
   when:
     branch:
     - master
+    event:
+    - tag
 
 # @see: http://plugins.drone.io/drone-plugins/drone-webhook/
 # @see: https://keel.sh/docs/#webhooks
@@ -83,3 +86,4 @@ trigger:
   - dev
   event:
   - push
+  - tag
