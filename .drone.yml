@@ -32,25 +32,6 @@ steps:
     branch:
     - master
 
-# @see: http://plugins.drone.io/drone-plugins/drone-docker/
-# @see: https://github.com/drone-plugins/drone-docker
-- name: build-dockerhub
-  image: plugins/docker
-  settings:
-    repo: immanuelfodor/kube-karp
-    username: immanuelfodor
-    password:
-      from_secret: dockerhub_kubekarp_access_token
-    dockerfile: Dockerfile
-    auto_tag: true
-    tags:
-      - master
-  when:
-    branch:
-    - master
-    event:
-    - tag
-
 # @see: http://plugins.drone.io/drone-plugins/drone-webhook/
 # @see: https://keel.sh/docs/#webhooks
 - name: deploy-k8s
@@ -86,4 +67,49 @@ trigger:
   - dev
   event:
   - push
+
+---
+kind: pipeline
+type: docker
+name: build
+
+clone:
+  depth: 50
+
+platform:
+  os: linux
+  arch: amd64
+
+steps:
+
+# @see: http://plugins.drone.io/drone-plugins/drone-docker/
+# @see: https://github.com/drone-plugins/drone-docker
+- name: build-dockerhub
+  image: plugins/docker
+  settings:
+    repo: immanuelfodor/kube-karp
+    username: immanuelfodor
+    password:
+      from_secret: dockerhub_kubekarp_access_token
+    dockerfile: Dockerfile
+    auto_tag: true
+    tags:
+      - master
+
+# @see: http://plugins.drone.io/drone-plugins/drone-webhook/
+- name: notify-done
+  image: plugins/webhook
+  failure: ignore
+  settings:
+    urls:
+      from_secret: done_webhook_url
+    content_type: application/json
+    template: |
+      {
+        "build": "{{ build.status }} @ {{ repo.owner }}/{{ repo.name }} on branch {{ build.branch }}",
+        "url": "{{ build.link }}"
+      }
+
+trigger:
+  event:
   - tag
