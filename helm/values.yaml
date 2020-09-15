@@ -64,7 +64,7 @@ podSecurityContext: {}
 # other policies pretty restrictive
 securityContext:
   capabilities:
-    add: 
+    add:
     - NET_ADMIN
   allowPrivilegeEscalation: false
   readOnlyRootFilesystem: true

@@ -61,7 +61,7 @@ clusters:
 ```bash
 # this will not work
 kubectl get nodes
-# Unable to connect to the server: x509: certificate is valid for 
+# Unable to connect to the server: x509: certificate is valid for
 # 192.168.100.110, 192.168.100.111, 192.168.100.112, 127.0.0.1, 10.43.0.1, not 192.168.100.100
 
 # quick and dirty solution to get around it
@@ -103,7 +103,7 @@ Should you have a cluster bootstrapped with `kubeadm`, you can find some reading
 
 ## How does Kube Karp compare to other tools?
 
-Kube Karp does not provide `LoadBalancer` resources for exposed services, it only manages a virtual IP accross nodes in the same subnet. 
+Kube Karp does not provide `LoadBalancer` resources for exposed services, it only manages a virtual IP accross nodes in the same subnet.
 
 However, its unique feature is that it can load balance the Kube API Server as well which other LB solutions can not do at the time of writing. See the following open issues for the circular dependency problem in [Porter #125](https://github.com/kubesphere/porter/issues/125), [MetalLB #168](https://github.com/metallb/metallb/issues/168) and [Kube-vip #76](https://github.com/plunder-app/kube-vip/issues/76) repositories.
 
