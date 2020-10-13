@@ -69,11 +69,11 @@ securityContext:
   allowPrivilegeEscalation: false
   readOnlyRootFilesystem: true
 
-# Memory usage should be around 3-4Mi when running on just one node
-# and cpu usage around 0% - but let's dream big
+# Memory usage should be around 3-4Mi per container when running on 7 nodes
+# and cpu usage around 0% based on personal usage - but let's dream big
 resources:
   limits:
-    cpu: 1000m
+    cpu: 100m
     memory: 100Mi
   requests:
     cpu: 30m
