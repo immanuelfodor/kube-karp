@@ -103,9 +103,7 @@ Should you have a cluster bootstrapped with `kubeadm`, you can find some reading
 
 ## How does Kube Karp compare to other tools?
 
-Kube Karp does not provide `LoadBalancer` resources for exposed services, it only manages a virtual IP accross nodes in the same subnet.
-
-However, its unique feature is that it can load balance the Kube API Server as well which other LB solutions can not do at the time of writing. See the following open issues for the circular dependency problem in [Porter #125](https://github.com/kubesphere/porter/issues/125), [MetalLB #168](https://github.com/metallb/metallb/issues/168) and [Kube-vip #76](https://github.com/plunder-app/kube-vip/issues/76) repositories.
+Kube Karp's unique feature is that it can load balance the Kube API Server without external tools which other LB solutions can not do at the time of writing. It does not provide `LoadBalancer` resources for exposed services, it only manages a floating virtual IP accross nodes in the same subnet, so you can always reference the cluster with the same IP address. (See the following open issues for the _circular dependency problem_ in [Porter #125](https://github.com/kubesphere/porter/issues/125), [MetalLB #168](https://github.com/metallb/metallb/issues/168) and [Kube-vip #76](https://github.com/plunder-app/kube-vip/issues/76) repositories.)
 
 You could also use Keepalived with HAProxy as mentioned in the official [k8s HA docs](https://github.com/kubernetes/kubeadm/blob/master/docs/ha-considerations.md) but you would also need to manually edit things on the nodes and then do the `kubeadm init` bootstrapping afterwards, which is not feasible if you already have a running cluster and you have even set it up with another cluster bootstrapping method (e.g., RKE).
 
