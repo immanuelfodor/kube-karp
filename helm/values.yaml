@@ -66,6 +66,7 @@ securityContext:
   capabilities:
     add:
     - NET_ADMIN
+    - NET_RAW
   allowPrivilegeEscalation: false
   readOnlyRootFilesystem: true
 
