@@ -52,8 +52,8 @@ steps:
           && chmod +x $FILE \
         || true
       )
-  - docker login --username immanuelfodor --password "${DOCKERHUB_PASSWORD}"
-  - docker login $HARBOR_FQDN --username "${HARBOR_USERNAME}" --password "${HARBOR_PASSWORD}"
+  - docker login --username immanuelfodor --password "$DOCKERHUB_PASSWORD"
+  - docker login $HARBOR_FQDN --username "$HARBOR_USERNAME" --password "$HARBOR_PASSWORD"
   - docker buildx create --use
   - |
       docker buildx build \
@@ -144,7 +144,7 @@ steps:
           && chmod +x $FILE \
         || true
       )
-  - docker login --username immanuelfodor --password "${DOCKERHUB_PASSWORD}"
+  - docker login --username immanuelfodor --password "$DOCKERHUB_PASSWORD"
   - docker buildx create --use
   - |
       docker buildx build \
