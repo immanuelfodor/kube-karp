@@ -10,40 +10,59 @@ platform:
   os: linux
   arch: amd64
 
+# Set the project as Trusted in Drone project settings to let it use volumes
+volumes:
+- name: dockersock
+  host:
+    path: /var/run/docker.sock
+- name: cache-docker-buildx-0.5.1
+  host:
+    path: /tmp/drone/cache/docker-buildx-0.5.1
+
 steps:
 
-# @see: http://plugins.drone.io/drone-plugins/drone-docker/
-# @see: https://github.com/drone-plugins/drone-docker
-- name: build-harbor
-  image: plugins/docker
-  settings:
-    registry:
-      from_secret: harbor_registry_fqdn
-    repo:
-      from_secret: harbor_repo
-    username:
-      from_secret: harbor_robot_kubekarp_push_username
-    password:
-      from_secret: harbor_robot_kubekarp_push_password
-    dockerfile: Dockerfile
-    tags:
-      - master
-  when:
-    branch:
-    - master
-
-# @see: http://plugins.drone.io/drone-plugins/drone-docker/
-# @see: https://github.com/drone-plugins/drone-docker
-- name: build-dockerhub
-  image: plugins/docker
-  settings:
-    repo: immanuelfodor/kube-karp
-    username: immanuelfodor
-    password:
+# Multi-platform build, downloading buildx only when not cached
+# @see: https://docs.drone.io/pipeline/docker/examples/services/docker/
+- name: build-docker
+  image: docker:dind
+  volumes:
+  - name: dockersock
+    path: /var/run/docker.sock
+  - name: cache-docker-buildx-0.5.1
+    path: /root/.docker/cli-plugins
+  environment:
+    DOCKER_CLI_EXPERIMENTAL: enabled
+    DOCKERHUB_PASSWORD:
       from_secret: dockerhub_kubekarp_access_token
-    dockerfile: Dockerfile
-    tags:
-      - master
+    HARBOR_FQDN:
+      from_secret: harbor_registry_fqdn
+    HARBOR_REPO:
+      from_secret: harbor_repo
+    HARBOR_USERNAME:
+      from_secret: harbor_robot_kubekarp_push_username
+    HARBOR_PASSWORD:
+      from_secret: harbor_robot_kubekarp_push_password
+  commands:
+  - |
+      (
+        set -x; \
+        FILE=~/.docker/cli-plugins/docker-buildx; \
+        [ ! -f $FILE ] && \
+          wget -O $FILE https://github.com/docker/buildx/releases/download/v0.5.1/buildx-v0.5.1.linux-amd64 \
+          && chmod +x $FILE \
+        || true
+      )
+  - docker login --username immanuelfodor --password "${DOCKERHUB_PASSWORD}"
+  - docker login $HARBOR_FQDN --username "${HARBOR_USERNAME}" --password "${HARBOR_PASSWORD}"
+  - docker buildx create --use
+  - |
+      docker buildx build \
+        --platform linux/arm,linux/arm64,linux/amd64 \
+        --tag $HARBOR_REPO:${DRONE_COMMIT_SHA:0:10}-${DRONE_BUILD_NUMBER} \
+        --tag $HARBOR_REPO:master \
+        --tag immanuelfodor/kube-karp:master \
+        --push \
+        .
 
 # @see: http://plugins.drone.io/drone-plugins/drone-webhook/
 # @see: https://keel.sh/docs/#webhooks
@@ -54,12 +73,10 @@ steps:
       from_secret: keel_webhook_url
     content_type: application/json
     template:
-      from_secret: keel_native_payload_repo_tag_master
-  when:
-    branch:
-    - master
+      from_secret: keel_native_payload_repo_tag_commit
 
 # @see: http://plugins.drone.io/drone-plugins/drone-webhook/
+# @see: https://github.com/drone-plugins/drone-webhook/blob/master/plugin.go
 - name: notify-done
   image: plugins/webhook
   failure: ignore
@@ -69,22 +86,22 @@ steps:
     content_type: application/json
     template: |
       {
-        "build": "{{ build.status }} @ {{ repo.owner }}/{{ repo.name }} on branch {{ build.branch }}",
-        "url": "{{ build.link }}"
+        "build": "#{{ build.number }} {{ build.status }} @ {{ repo.owner }}/{{ repo.name }} on branch {{ build.branch }}",
+        "message": "{{ trim build.message }}",
+        "url": "{{ build.link }}",
+        "commit": "{{ truncate build.commit 10 }}"
       }
 
 trigger:
   branch:
   - master
-  - staging
-  - dev
   event:
   - push
 
 ---
 kind: pipeline
 type: docker
-name: build-release
+name: build-tag
 
 clone:
   depth: 50
@@ -93,21 +110,53 @@ platform:
   os: linux
   arch: amd64
 
+# Set the project as Trusted in Drone project settings to let it use volumes
+volumes:
+- name: dockersock
+  host:
+    path: /var/run/docker.sock
+- name: cache-docker-buildx-0.5.1
+  host:
+    path: /tmp/drone/cache/docker-buildx-0.5.1
+
 steps:
 
-# @see: http://plugins.drone.io/drone-plugins/drone-docker/
-# @see: https://github.com/drone-plugins/drone-docker
-- name: build-dockerhub
-  image: plugins/docker
-  settings:
-    repo: immanuelfodor/kube-karp
-    username: immanuelfodor
-    password:
+# Multi-platform build, downloading buildx only when not cached
+# @see: https://docs.drone.io/pipeline/docker/examples/services/docker/
+- name: build-docker
+  image: docker:dind
+  volumes:
+  - name: dockersock
+    path: /var/run/docker.sock
+  - name: cache-docker-buildx-0.5.1
+    path: /root/.docker/cli-plugins
+  environment:
+    DOCKER_CLI_EXPERIMENTAL: enabled
+    DOCKERHUB_PASSWORD:
       from_secret: dockerhub_kubekarp_access_token
-    dockerfile: Dockerfile
-    auto_tag: true
+  commands:
+  - |
+      (
+        set -x; \
+        FILE=~/.docker/cli-plugins/docker-buildx; \
+        [ ! -f $FILE ] && \
+          wget -O $FILE https://github.com/docker/buildx/releases/download/v0.5.1/buildx-v0.5.1.linux-amd64 \
+          && chmod +x $FILE \
+        || true
+      )
+  - docker login --username immanuelfodor --password "${DOCKERHUB_PASSWORD}"
+  - docker buildx create --use
+  - |
+      docker buildx build \
+        --platform linux/arm,linux/arm64,linux/amd64 \
+        --tag immanuelfodor/kube-karp:$DRONE_TAG \
+        --tag immanuelfodor/kube-karp:$(echo "${DRONE_TAG}" | cut -d'.' -f 1-2) \
+        --tag immanuelfodor/kube-karp:$(echo "${DRONE_TAG}" | cut -d'.' -f 1) \
+        --push \
+        .
 
 # @see: http://plugins.drone.io/drone-plugins/drone-webhook/
+# @see: https://github.com/drone-plugins/drone-webhook/blob/master/plugin.go
 - name: notify-done
   image: plugins/webhook
   failure: ignore
@@ -117,8 +166,10 @@ steps:
     content_type: application/json
     template: |
       {
-        "build": "{{ build.status }} @ {{ repo.owner }}/{{ repo.name }} on branch {{ build.branch }}",
-        "url": "{{ build.link }}"
+        "build": "#{{ build.number }} {{ build.status }} @ {{ repo.owner }}/{{ repo.name }} on tag {{ build.tag }}",
+        "message": "{{ trim build.message }}",
+        "url": "{{ build.link }}",
+        "commit": "{{ truncate build.commit 10 }}"
       }
 
 trigger:
