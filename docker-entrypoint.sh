@@ -1,4 +1,5 @@
 #!/bin/sh
+set -eu
 
 # cleanup when the container is stopped or ucarp exits
 cleanup () {
