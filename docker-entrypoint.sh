@@ -19,9 +19,27 @@ if [ ! -z "${KARP_DEBUG}" ] ; then
   /usr/sbin/ucarp --help
 fi
 
+# if no explicit host interface is set, we determine it from the default route
+if [ -z "$KARP_INTERFACE" ] ; then
+  KARP_INTERFACE="$(ip r | awk '/^default / { for(i=1; i<=NF; i++) if ($i == "dev") print $(i+1) }')"
+
+  if [ -z "$KARP_INTERFACE" ]; then
+      echo "Could not infer host interface"
+      exit 1
+  fi
+
+  echo "Auto host interface: ${KARP_INTERFACE}"
+fi
+
 # if no explicit host ip is set, we determine it from the interface
 if [ -z "${KARP_HOST_IP}" ] ; then
   KARP_HOST_IP=$(ip addr show ${KARP_INTERFACE} | grep inet | grep -v secondary | grep -oE "([0-9]{1,3}\.){3}[0-9]{1,3}" | head -n 1)
+
+  if [ -z "$KARP_HOST_IP" ]; then
+      echo "Could not infer host ip"
+      exit 1
+  fi
+
   echo "Auto host IP: ${KARP_HOST_IP}"
 fi
 
