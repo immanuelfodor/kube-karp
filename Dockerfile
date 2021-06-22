@@ -3,7 +3,7 @@ FROM alpine
 RUN set -x \
     && apk add --update --no-cache ucarp
 
-ENV KARP_INTERFACE eth0
+ENV KARP_INTERFACE=
 ENV KARP_HOST_IP=
 ENV KARP_VIRTUAL_IP 192.168.100.1
 ENV KARP_SUBNET 24
