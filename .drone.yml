@@ -34,6 +34,8 @@ steps:
     DOCKER_CLI_EXPERIMENTAL: enabled
     DOCKERHUB_PASSWORD:
       from_secret: dockerhub_kubekarp_access_token
+    QUAY_PASSWORD:
+      from_secret: quay_kubekarp_encrypted_pass
     HARBOR_FQDN:
       from_secret: harbor_registry_fqdn
     HARBOR_REPO:
@@ -53,6 +55,7 @@ steps:
         || true
       )
   - docker login --username immanuelfodor --password "$DOCKERHUB_PASSWORD"
+  - docker login --username immanuelfodor --password "$QUAY_PASSWORD" quay.io
   - docker login $HARBOR_FQDN --username "$HARBOR_USERNAME" --password "$HARBOR_PASSWORD"
   - docker buildx create --use
   - |
@@ -61,6 +64,7 @@ steps:
         --tag $HARBOR_REPO:${DRONE_COMMIT_SHA:0:10}-${DRONE_BUILD_NUMBER} \
         --tag $HARBOR_REPO:master \
         --tag immanuelfodor/kube-karp:master \
+        --tag quay.io/immanuelfodor/kube-karp:master \
         --push \
         .
 
@@ -134,6 +138,8 @@ steps:
     DOCKER_CLI_EXPERIMENTAL: enabled
     DOCKERHUB_PASSWORD:
       from_secret: dockerhub_kubekarp_access_token
+    QUAY_PASSWORD:
+      from_secret: quay_kubekarp_encrypted_pass
   commands:
   - |
       (
@@ -145,6 +151,7 @@ steps:
         || true
       )
   - docker login --username immanuelfodor --password "$DOCKERHUB_PASSWORD"
+  - docker login --username immanuelfodor --password "$QUAY_PASSWORD" quay.io
   - docker buildx create --use
   - |
       docker buildx build \
@@ -152,6 +159,9 @@ steps:
         --tag immanuelfodor/kube-karp:$DRONE_TAG \
         --tag immanuelfodor/kube-karp:$(echo "${DRONE_TAG}" | cut -d'.' -f 1-2) \
         --tag immanuelfodor/kube-karp:$(echo "${DRONE_TAG}" | cut -d'.' -f 1) \
+        --tag quay.io/immanuelfodor/kube-karp:$DRONE_TAG \
+        --tag quay.io/immanuelfodor/kube-karp:$(echo "${DRONE_TAG}" | cut -d'.' -f 1-2) \
+        --tag quay.io/immanuelfodor/kube-karp:$(echo "${DRONE_TAG}" | cut -d'.' -f 1) \
         --push \
         .
 
