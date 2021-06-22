@@ -10,7 +10,7 @@ cleanup () {
 trap "cleanup" SIGINT
 trap "cleanup" SIGTERM
 
-cat-file-with-header() {
+cat_file_with_header () {
   echo "==> $1 <=="
   cat "$1"
   echo
@@ -19,10 +19,10 @@ cat-file-with-header() {
 # set the debug env var to anything for debug logging
 if [ ! -z "${KARP_DEBUG}" ] ; then
   set -x
-  cat-file-with-header /etc/conf.d/ucarp
-  cat-file-with-header /etc/init.d/ucarp
-  cat-file-with-header "$KARP_DOWNSCRIPT"
-  cat-file-with-header "$KARP_UPSCRIPT"
+  cat_file_with_header /etc/conf.d/ucarp
+  cat_file_with_header /etc/init.d/ucarp
+  cat_file_with_header "$KARP_DOWNSCRIPT"
+  cat_file_with_header "$KARP_UPSCRIPT"
   /usr/sbin/ucarp --help
 fi
 
